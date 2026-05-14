@@ -1,0 +1,16 @@
+<service>
+  <id>BeachCam-VPNWatchdog</id>
+  <name>BeachCam VPN Watchdog</name>
+  <description>Monitors OpenVPN Connect tunnel and reconnects on drop</description>
+  <executable>powershell.exe</executable>
+  <arguments>-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "C:\BeachCam\scripts\vpn-watchdog.ps1"</arguments>
+  <startmode>Automatic</startmode>
+  <logmode>rotate</logmode>
+  <log mode="rotate">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="15 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="restart" delay="60 sec"/>
+</service>

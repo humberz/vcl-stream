@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ─── CONFIG ───────────────────────────────────────────── */
+    :root {
+      --api-key:  "4e4fe862a37a4ea99b53158e735013ca";
+      --city:     "Auckland";
+      --units:    "metric";
+
+      --orange:        #F6861F;
+      --orange-soft:   rgba(246, 134, 31, 0.14);
+      --orange-glow:   rgba(246, 134, 31, 0.28);
+      --orange-border: rgba(246, 134, 31, 0.22);
+      --glass-bg-2:    rgba(255, 255, 255, 0.18);
+      --glass-border:  rgba(255, 255, 255, 0.10);
+      --glass-shine:   rgba(255, 255, 255, 0.16);
+      --text-primary:  rgba(255, 255, 255, 0.95);
+      --text-secondary:rgba(255, 255, 255, 0.80);
+      --text-tertiary: rgba(255, 255, 255, 0.60);
+
+      --card-bg: linear-gradient(135deg, rgba(20,20,20,0.82) 0%, rgba(15,15,15,0.78) 50%, rgba(30,18,8,0.80) 100%);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: transparent;
+      width: 3840px;
+      height: 2160px;
+      overflow: hidden;
+    }
+
+    body {
+      position: relative;
+      font-family: 'Figtree', sans-serif;
+    }
+
+    /* ── WEATHER CARD ── */
+    .card {
+      position: absolute;
+      bottom: 120px;
+      left: 120px;
+      width: 520px;
+      padding: 28px 36px;
+      border-radius: 36px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--glass-border);
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.06) inset,
+        0 2px 0 0 var(--glass-shine) inset,
+        0 32px 64px rgba(0,0,0,0.38),
+        0 8px 24px rgba(0,0,0,0.25),
+        0 0 80px rgba(246,134,31,0.05);
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+      animation: glassIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 36px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, transparent 35%);
+      pointer-events: none;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      bottom: -1.5px; left: 20%; right: 20%;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, var(--orange-border), transparent);
+      border-radius: 50%;
+    }
+
+    @keyframes glassIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .location-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .location-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 10px var(--orange-glow);
+      animation: breathe 3s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes breathe {
+      0%,100% { opacity: 1; box-shadow: 0 0 10px var(--orange-glow); }
+      50%      { opacity: 0.5; box-shadow: 0 0 4px var(--orange-glow); }
+    }
+
+    .city-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .clock {
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--text-tertiary);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── MAIN WEATHER ── */
+    .main {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .icon-pill {
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      background: var(--orange-soft);
+      border: 1.5px solid var(--orange-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(246,134,31,0.12), 0 1px 0 rgba(255,255,255,0.08) inset;
+    }
+
+    .icon-pill img {
+      width: 56px; height: 56px;
+      filter: drop-shadow(0 2px 8px rgba(246,134,31,0.4));
+    }
+
+    .temp {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 96px;
+      line-height: 1;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+    }
+
+    .temp-unit {
+      font-size: 42px;
+      font-weight: 400;
+      color: var(--orange);
+      vertical-align: super;
+      margin-left: 2px;
+    }
+
+    .condition {
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255,255,255,0.08) 20%,
+        rgba(246,134,31,0.16) 50%,
+        rgba(255,255,255,0.08) 80%,
+        transparent
+      );
+      margin-bottom: 16px;
+    }
+
+    /* ── ROTATING STAT ── */
+    .stat-block {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 20px 16px 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .stat-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      transition: opacity 0.3s;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--orange);
+      line-height: 1;
+      transition: opacity 0.3s;
+    }
+
+    .stat-dots {
+      display: flex;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .stat-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: background 0.3s;
+    }
+
+    .stat-dot.active {
+      background: var(--orange);
+    }
+
+    /* ── WIND FORECAST ── */
+    .forecast-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .forecast {
+      display: flex;
+      gap: 10px;
+    }
+
+    .fc-item {
+      flex: 1;
+      padding: 14px 8px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.30);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+    }
+
+    .fc-time {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      letter-spacing: 0.06em;
+    }
+
+    .fc-arrow {
+      font-size: 28px;
+      line-height: 1;
+      color: var(--orange);
+      filter: drop-shadow(0 0 6px rgba(246,134,31,0.4));
+      display: inline-block;
+    }
+
+    .fc-speed-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .fc-speed-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .fc-speed-unit {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+    }
+
+    .fc-dir {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── ERROR ── */
+    .error-msg {
+      font-size: 18px;
+      color: #ff6b6b;
+      margin-top: 10px;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    /* ── AD BUG ── */
+    .ad-bug {
+      position: absolute;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      opacity: 0;
+      transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s;
+      white-space: nowrap;
+      text-align: center;
+      padding: 26px 52px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(20,20,20,0.82) 0%, rgba(15,15,15,0.78) 50%, rgba(30,18,8,0.80) 100%);
+      border: 1.5px solid rgba(255,255,255,0.10);
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.06) inset,
+        0 2px 0 0 rgba(255,255,255,0.16) inset,
+        0 16px 48px rgba(0,0,0,0.38);
+    }
+
+    .ad-bug.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .ad-tagline {
+      font-family: 'Figtree', sans-serif;
+      font-size: 29px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .ad-subtitle {
+      font-family: 'Figtree', sans-serif;
+      font-size: 23px;
+      font-style: italic;
+      font-weight: 400;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.03em;
+      margin-bottom: 18px;
+    }
+
+    .ad-divider {
+      width: 80px;
+      height: 3px;
+      background: rgba(246,134,31,0.7);
+      border-radius: 2px;
+      margin: 0 auto 18px;
+    }
+
+    .ad-url {
+      font-family: 'Figtree', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.10em;
+    }
+
+    /* ── CAMERA LABELS ── */
+    .cam-label-top {
+      position: absolute;
+      bottom: 1150px;
+      left: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cam-label-bottom {
+      position: absolute;
+      top: 1150px;
+      right: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .cam-name {
+      font-family: "Figtree", sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.40);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    }
+
+    .cam-direction {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Figtree", sans-serif;
+    }
+
+    .cam-direction .cam-icon {
+      font-size: 16px;
+      filter: brightness(0) saturate(100%) invert(62%) sepia(76%) saturate(693%) hue-rotate(332deg) brightness(104%);
+    }
+
+    .cam-direction .cam-dir-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.90);
+      letter-spacing: 0.14em;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Weather Card -->
+<div class="card">
+  <div class="header">
+    <div class="location-wrap">
+      <div class="location-dot"></div>
+      <span class="city-name" id="cityName">—</span>
+    </div>
+    <span class="clock" id="clock">—</span>
+  </div>
+
+  <div class="main">
+    <div class="icon-pill">
+      <img id="weatherIcon" src="" alt="weather" />
+    </div>
+    <div class="temp-block">
+      <div class="temp" id="temp">—<span class="temp-unit">°</span></div>
+      <div class="condition" id="condition">Loading…</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Rotating stat block -->
+  <div class="stat-block">
+    <div class="stat-label" id="statLabel">Wind</div>
+    <div class="stat-value" id="statValue">—</div>
+    <div class="stat-dots">
+      <div class="stat-dot active" id="dot0"></div>
+      <div class="stat-dot" id="dot1"></div>
+      <div class="stat-dot" id="dot2"></div>
+    </div>
+  </div>
+
+  <div class="forecast-label">Wind — Next 9 hours</div>
+  <div class="forecast" id="forecast"></div>
+
+  <div class="error-msg" id="errorMsg" style="display:none"></div>
+</div>
+
+<!-- Ad Bug -->
+<div class="ad-bug" id="adBug">
+  <div class="ad-tagline">Integrated Electrical &amp; Technology Solutions</div>
+  <div class="ad-subtitle">Electrical &bull; AV &bull; Automation &bull; Networking &bull; Lighting</div>
+  <div class="ad-divider"></div>
+  <div class="ad-url">victorcontractors.co.nz</div>
+</div>
+
+<script>
+  const style   = getComputedStyle(document.documentElement);
+  const API_KEY = style.getPropertyValue('--api-key').trim().replace(/['"]/g, '');
+  const CITY    = style.getPropertyValue('--city').trim().replace(/['"]/g, '');
+  const UNITS   = style.getPropertyValue('--units').trim().replace(/['"]/g, '');
+
+  const unitSymbol = UNITS === 'imperial' ? '°F'  : '°C';
+  const speedUnit  = UNITS === 'imperial' ? 'mph' : 'm/s';
+
+  // ── Clock ──
+  function updateClock() {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // ── Rotating stats ──
+  let statIdx = 0;
+  let windSpeed = '—';
+  let windUnit = '';
+  let windDir = '';
+  let feelsNum = '—';
+  let feelsUnit = '';
+  let humidNum = '—';
+
+  const stats = [
+    { label: 'Wind', getHTML: () => `<span style="font-size:36px;font-weight:700;color:#F6861F">${windSpeed}</span> <span style="font-size:18px;color:rgba(255,255,255,0.45)">${windUnit}</span> <span style="font-size:26px;font-weight:600;color:rgba(255,255,255,0.85)">${windDir}</span>` },
+    { label: 'Feels Like', getHTML: () => `<span style="font-size:36px;font-weight:700;color:#F6861F">${feelsNum}</span><span style="font-size:18px;color:rgba(255,255,255,0.45)">${feelsUnit}</span>` },
+    { label: 'Humidity', getHTML: () => `<span style="font-size:36px;font-weight:700;color:#F6861F">${humidNum}</span><span style="font-size:18px;color:rgba(255,255,255,0.45)">%</span>` },
+  ];
+
+  function rotateStat() {
+    statIdx = (statIdx + 1) % stats.length;
+    const label = document.getElementById('statLabel');
+    const value = document.getElementById('statValue');
+    label.style.opacity = 0;
+    value.style.opacity = 0;
+    setTimeout(() => {
+      label.textContent = stats[statIdx].label;
+      value.innerHTML = stats[statIdx].getHTML();
+      label.style.opacity = 1;
+      value.style.opacity = 1;
+    }, 300);
+    for (let i = 0; i < 3; i++) {
+      document.getElementById('dot' + i).className = 'stat-dot' + (i === statIdx ? ' active' : '');
+    }
+  }
+  setInterval(rotateStat, 5000);
+
+  // ── Ad bug ──
+  function showAdBug() {
+    const bug = document.getElementById('adBug');
+    bug.classList.add('visible');
+    setTimeout(() => bug.classList.remove('visible'), 15000);
+  }
+  setTimeout(showAdBug, 15000);          // first show after 15s
+  setInterval(showAdBug, 30000);         // then every 30s (up 10s, out 20s
+
+  // ── Compass ──
+  function degreesToCompass(deg) {
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    return dirs[Math.round(deg / 22.5) % 16];
+  }
+
+  function windArrow(deg) {
+    const rotation = (deg + 180) % 360;
+    return `<span class="fc-arrow" style="transform:rotate(${rotation}deg)">↑</span>`;
+  }
+
+  // ── Error ──
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.style.display = 'block';
+    el.textContent = msg;
+    document.getElementById('condition').textContent = 'Error';
+  }
+
+  // ── Weather fetch ──
+  async function fetchWeather() {
+    if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
+      showError('Add your OpenWeatherMap API key in index.html');
+      return;
+    }
+    try {
+      const res  = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(CITY)}&units=${UNITS}&appid=${API_KEY}`
+      );
+      const data = await res.json();
+      if (data.cod !== 200) { showError(`API: ${data.message}`); return; }
+
+      document.getElementById('cityName').textContent = data.name.toUpperCase();
+      document.getElementById('temp').innerHTML =
+        `${Math.round(data.main.temp)}<span class="temp-unit">${unitSymbol}</span>`;
+      document.getElementById('condition').textContent = data.weather[0].description;
+      document.getElementById('weatherIcon').src =
+        `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+      windSpeed = `${data.wind.speed}`;
+      windUnit  = speedUnit;
+      windDir   = degreesToCompass(data.wind.deg);
+      feelsNum  = `${Math.round(data.main.feels_like)}`;
+      feelsUnit = unitSymbol;
+      humidNum  = `${data.main.humidity}`;
+
+      document.getElementById('statValue').innerHTML = stats[statIdx].getHTML();
+      document.getElementById('statLabel').textContent = stats[statIdx].label;
+
+    } catch(e) {
+      showError('Network error — check API key & connection');
+    }
+  }
+
+  // ── Forecast fetch ──
+  async function fetchForecast() {
+    if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') return;
+    try {
+      const res  = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(CITY)}&units=${UNITS}&cnt=3&appid=${API_KEY}`
+      );
+      const data = await res.json();
+      if (data.cod !== '200') return;
+
+      const container = document.getElementById('forecast');
+      container.innerHTML = '';
+      data.list.forEach(slot => {
+        const hour = new Date(slot.dt * 1000)
+          .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const item = document.createElement('div');
+        item.className = 'fc-item';
+        item.innerHTML = `
+          <span class="fc-time">${hour}</span>
+          ${windArrow(slot.wind.deg)}
+          <span class="fc-speed-num">${slot.wind.speed}</span>
+          <span class="fc-dir">${degreesToCompass(slot.wind.deg)}</span>
+        `;
+        container.appendChild(item);
+      });
+    } catch(e) {}
+  }
+
+  fetchWeather();
+  fetchForecast();
+  setInterval(() => { fetchWeather(); fetchForecast(); }, 10 * 60 * 1000);
+</script>
+
+<!-- Camera Labels -->
+<div class="cam-label-top">
+  <span class="cam-name">Takapuna Beach</span>
+  <div class="cam-direction">
+    <span class="cam-icon">&#128065;</span>
+    <span class="cam-dir-text">SSE</span>
+  </div>
+</div>
+
+<div class="cam-label-bottom">
+  <span class="cam-name">Lake Pupuke</span>
+  <div class="cam-direction" style="justify-content:flex-end">
+    <span class="cam-icon">&#128065;</span>
+    <span class="cam-dir-text">WNW</span>
+  </div>
+</div>
+</body>
+</html>

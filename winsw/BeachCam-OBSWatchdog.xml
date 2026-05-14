@@ -1,0 +1,16 @@
+<service>
+  <id>BeachCam-OBSWatchdog</id>
+  <name>BeachCam OBS Watchdog</name>
+  <description>Monitors OBS stream and restarts stream via WebSocket if it stops</description>
+  <executable>powershell.exe</executable>
+  <arguments>-ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "C:\BeachCam\scripts\obs-watchdog.ps1"</arguments>
+  <startmode>Automatic</startmode>
+  <logmode>rotate</logmode>
+  <log mode="rotate">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="restart" delay="60 sec"/>
+  <onfailure action="restart" delay="120 sec"/>
+</service>

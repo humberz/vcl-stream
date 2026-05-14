@@ -1,0 +1,154 @@
+-- scene-switcher.lua
+-- Monitors BeachCam and LakeCam, switches to BRB when either drops
+-- Restarts stopped sources to force RTSP reconnection
+-- Waits 2 minutes after recovery before switching back
+-- Sends email alerts via PowerShell when cameras drop or recover
+
+-- CONFIG
+local MAIN_SCENE      = "Lake & Beach"
+local BRB_SCENE       = "BRB"
+local CHECK_MS        = 2000
+local RECOVERY_DELAY  = 120
+local RESTART_AFTER_S = 20
+local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
+
+local SOURCES = {
+    "BeachCam",
+    "LakeCam"
+}
+
+local obs = obslua
+local currently_brb = false
+local alert_sent = false
+local recovery_since = nil
+local source_down_since = {}
+
+function get_time_s()
+    return os.time()
+end
+
+function is_source_playing(source_name)
+    local source = obs.obs_get_source_by_name(source_name)
+    if source == nil then return false end
+    local state = obs.obs_source_media_get_state(source)
+    obs.obs_source_release(source)
+    return state == obs.OBS_MEDIA_STATE_PLAYING
+end
+
+function restart_source(source_name)
+    local source = obs.obs_get_source_by_name(source_name)
+    if source == nil then return end
+    local state = obs.obs_source_media_get_state(source)
+    if state ~= obs.OBS_MEDIA_STATE_PLAYING then
+        obs.script_log(obs.LOG_INFO, "Restarting source: " .. source_name)
+        obs.obs_source_media_restart(source)
+    end
+    obs.obs_source_release(source)
+end
+
+function switch_to_scene(scene_name)
+    local scene = obs.obs_get_source_by_name(scene_name)
+    if scene ~= nil then
+        obs.obs_frontend_set_current_scene(scene)
+        obs.obs_source_release(scene)
+    end
+end
+
+function send_alert(subject, body)
+    local cmd = 'powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "' .. ALERT_SCRIPT .. '" -Subject "' .. subject .. '" -Body "' .. body .. '"'
+    os.execute(cmd)
+end
+
+function get_down_sources()
+    local down = {}
+    for _, name in ipairs(SOURCES) do
+        if not is_source_playing(name) then
+            table.insert(down, name)
+        end
+    end
+    return down
+end
+
+function check_sources()
+    if not obs.obs_frontend_streaming_active() then
+        return
+    end
+
+    local now = get_time_s()
+    local down_sources = get_down_sources()
+    local all_playing = #down_sources == 0
+
+    -- Handle source restart logic
+    for _, name in ipairs(SOURCES) do
+        if is_source_playing(name) then
+            source_down_since[name] = nil
+        else
+            if source_down_since[name] == nil then
+                source_down_since[name] = now
+                obs.script_log(obs.LOG_INFO, name .. " stopped - starting restart countdown")
+            else
+                local down_for = now - source_down_since[name]
+                if down_for >= RESTART_AFTER_S then
+                    obs.script_log(obs.LOG_INFO, name .. " down for " .. down_for .. "s - restarting")
+                    restart_source(name)
+                    source_down_since[name] = now
+                end
+            end
+        end
+    end
+
+    -- Handle scene switching
+    local current = obs.obs_frontend_get_current_scene()
+    local current_name = ""
+    if current ~= nil then
+        current_name = obs.obs_source_get_name(current)
+        obs.obs_source_release(current)
+    end
+
+    if not all_playing then
+        recovery_since = nil
+        if current_name == MAIN_SCENE then
+            obs.script_log(obs.LOG_INFO, "Camera(s) not playing - switching to BRB: " .. table.concat(down_sources, ", "))
+            switch_to_scene(BRB_SCENE)
+            currently_brb = true
+        end
+        if not alert_sent then
+            send_alert("Camera Drop - Switched to BRB", "The following cameras stopped playing: " .. table.concat(down_sources, ", ") .. ". Stream has switched to BRB scene.")
+            alert_sent = true
+        end
+
+    elseif all_playing and currently_brb then
+        if recovery_since == nil then
+            recovery_since = now
+            obs.script_log(obs.LOG_INFO, "Cameras recovered - waiting " .. RECOVERY_DELAY .. "s before switching back...")
+        else
+            local waited = now - recovery_since
+            local remaining = RECOVERY_DELAY - waited
+            if remaining > 0 then
+                obs.script_log(obs.LOG_INFO, "Cameras healthy - switching back in " .. remaining .. "s...")
+            else
+                obs.script_log(obs.LOG_INFO, "Recovery delay complete - switching back to Lake & Beach")
+                switch_to_scene(MAIN_SCENE)
+                currently_brb = false
+                recovery_since = nil
+                if alert_sent then
+                    send_alert("Cameras Recovered", "All cameras are playing again. Stream has switched back to Lake & Beach.")
+                    alert_sent = false
+                end
+            end
+        end
+    end
+end
+
+function script_load(settings)
+    obs.timer_add(check_sources, CHECK_MS)
+    obs.script_log(obs.LOG_INFO, "Scene switcher loaded - monitoring: " .. table.concat(SOURCES, ", "))
+end
+
+function script_unload()
+    obs.timer_remove(check_sources)
+end
+
+function script_description()
+    return "Switches to BRB when BeachCam or LakeCam stops playing.\nRestarts stopped sources after 20s.\nWaits 2 minutes after recovery before switching back.\nSends email alerts on drop and recovery."
+end
