@@ -387,26 +387,25 @@
     /* ── CAMERA LABELS ── */
     .cam-label-top {
       position: absolute;
-      bottom: 1150px;
+      top: 120px;
       left: 120px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
     }
 
     .cam-label-bottom {
       position: absolute;
-      top: 1150px;
-      right: 120px;
+      top: 1200px;
+      left: 120px;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
+      gap: 10px;
     }
 
     .cam-name {
       font-family: "Figtree", sans-serif;
-      font-size: 18px;
+      font-size: 36px;
       font-weight: 600;
       color: rgba(255,255,255,0.40);
       letter-spacing: 0.12em;
@@ -417,19 +416,19 @@
     .cam-direction {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       font-family: "Figtree", sans-serif;
     }
 
     .cam-direction .cam-icon {
-      font-size: 32px;
+      font-size: 52px;
       line-height: 1;
       transform: translateY(-2px);
       filter: brightness(0) saturate(100%) invert(62%) sepia(76%) saturate(693%) hue-rotate(332deg) brightness(104%);
     }
 
     .cam-direction .cam-dir-text {
-      font-size: 18px;
+      font-size: 36px;
       font-weight: 700;
       color: rgba(255,255,255,0.90);
       letter-spacing: 0.14em;
@@ -643,7 +642,7 @@
 
 <div class="cam-label-bottom">
   <span class="cam-name">Lake Pupuke</span>
-  <div class="cam-direction" style="justify-content:flex-end">
+  <div class="cam-direction">
     <span class="cam-icon">&#128065;</span>
     <span class="cam-dir-text">WNW</span>
   </div>
