@@ -7,9 +7,10 @@
 -- CONFIG
 local MAIN_SCENE      = "Lake & Beach"
 local BRB_SCENE       = "BRB"
-local CHECK_MS        = 2000
-local RECOVERY_DELAY  = 120
-local RESTART_AFTER_S = 15
+local CHECK_MS            = 2000
+local RECOVERY_DELAY      = 120
+local RESTART_AFTER_S     = 15
+local POST_SWITCH_GRACE_S = 15
 local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
 
 local SOURCES = {
@@ -22,6 +23,7 @@ local currently_brb = false
 local alert_sent = false
 local recovery_since = nil
 local source_down_since = {}
+local switch_grace_until = nil
 
 function get_time_s()
     return os.time()
@@ -137,9 +139,13 @@ function check_sources()
     if not all_playing then
         recovery_since = nil
         if current_name == MAIN_SCENE then
-            obs.script_log(obs.LOG_INFO, "Switching to BRB - down: " .. table.concat(down_sources, ", "))
-            switch_to_scene(BRB_SCENE)
-            currently_brb = true
+            if switch_grace_until ~= nil and now < switch_grace_until then
+                obs.script_log(obs.LOG_INFO, "Post-switch grace period - ignoring transient drop for " .. (switch_grace_until - now) .. "s")
+            else
+                obs.script_log(obs.LOG_INFO, "Switching to BRB - down: " .. table.concat(down_sources, ", "))
+                switch_to_scene(BRB_SCENE)
+                currently_brb = true
+            end
         end
         if not alert_sent then
             send_alert("Camera Drop - Switched to BRB", "The following cameras stopped playing: " .. table.concat(down_sources, ", ") .. ". Stream has switched to BRB scene.")
@@ -160,6 +166,9 @@ function check_sources()
                 switch_to_scene(MAIN_SCENE)
                 currently_brb = false
                 recovery_since = nil
+                switch_grace_until = now + POST_SWITCH_GRACE_S
+                source_down_since = {}
+                obs.script_log(obs.LOG_INFO, "Grace period started - ignoring source state for " .. POST_SWITCH_GRACE_S .. "s")
                 if alert_sent then
                     send_alert("Cameras Recovered", "All cameras are playing again. Stream has switched back to Lake & Beach.")
                     alert_sent = false
