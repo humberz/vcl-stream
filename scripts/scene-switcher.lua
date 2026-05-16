@@ -11,6 +11,7 @@ local CHECK_MS            = 2000
 local RECOVERY_DELAY      = 120
 local RESTART_AFTER_S     = 15
 local POST_SWITCH_GRACE_S = 15
+local OPENING_TIMEOUT_S   = 30
 local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
 
 local SOURCES = {
@@ -24,6 +25,7 @@ local alert_sent = false
 local recovery_since = nil
 local source_down_since = {}
 local switch_grace_until = nil
+local source_opening_since = {}
 
 function get_time_s()
     return os.time()
@@ -46,10 +48,25 @@ function is_source_playing(source_name)
     if source == nil then return false end
     local state = obs.obs_source_media_get_state(source)
     obs.obs_source_release(source)
-    -- Consider PLAYING, OPENING and BUFFERING as healthy states
-    return state == obs.OBS_MEDIA_STATE_PLAYING
-        or state == obs.OBS_MEDIA_STATE_OPENING
-        or state == obs.OBS_MEDIA_STATE_BUFFERING
+
+    if state == obs.OBS_MEDIA_STATE_PLAYING then
+        source_opening_since[source_name] = nil
+        return true
+    elseif state == obs.OBS_MEDIA_STATE_OPENING or state == obs.OBS_MEDIA_STATE_BUFFERING then
+        local now = get_time_s()
+        if source_opening_since[source_name] == nil then
+            source_opening_since[source_name] = now
+        end
+        local stuck_for = now - source_opening_since[source_name]
+        if stuck_for >= OPENING_TIMEOUT_S then
+            obs.script_log(obs.LOG_INFO, source_name .. " stuck in " .. get_source_state_name(state) .. " for " .. stuck_for .. "s - treating as failed")
+            return false
+        end
+        return true
+    else
+        source_opening_since[source_name] = nil
+        return false
+    end
 end
 
 function restart_source(source_name)
