@@ -126,6 +126,47 @@ SLATE="/opt/fallback/slate.mp4"
 YOUTUBE_RTMP="rtmp://a.rtmp.youtube.com/live2/YOUR-STREAM-KEY"
 PID_FILE="/tmp/slate-ffmpeg.pid"
 FFMPEG="/usr/bin/ffmpeg"
+LOG="/var/log/stream-monitor.log"
+
+# Email alerts — same SMTP account as send-alert.ps1 on the OBS PC
+SMTP_HOST="smtp.safermail.co.nz"
+SMTP_PORT=25
+SMTP_USER="ups@victorcontractors.co.nz"
+SMTP_PASS="YOUR-SMTP-PASSWORD"
+ALERT_FROM="ups@victorcontractors.co.nz"
+ALERT_TO="josh@roomone.live"
+ALERT_COOLDOWN=600  # 10 minutes, matches OBS-side throttle
+
+send_alert() {
+  local subject="$1"
+  local body="$2"
+  local lock="/tmp/stream-alert-$(echo -n "$subject" | md5sum | cut -c1-8).lock"
+
+  # Throttle — skip if sent within cooldown window
+  if [ -f "$lock" ]; then
+    local age=$(( $(date +%s) - $(stat -c %Y "$lock") ))
+    [ "$age" -lt "$ALERT_COOLDOWN" ] && return
+  fi
+  touch "$lock"
+
+  python3 -c "
+import smtplib, sys
+from email.mime.text import MIMEText
+from datetime import datetime
+
+msg = MIMEText('$body\n\n--\nVultr Relay Alert\n' + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'))
+msg['Subject'] = '[BeachCam] $subject'
+msg['From'] = '$ALERT_FROM'
+msg['To'] = '$ALERT_TO'
+try:
+    s = smtplib.SMTP('$SMTP_HOST', $SMTP_PORT)
+    s.login('$SMTP_USER', '$SMTP_PASS')
+    s.sendmail('$ALERT_FROM', ['$ALERT_TO'], msg.as_string())
+    s.quit()
+except Exception as e:
+    print('Alert failed:', e, file=sys.stderr)
+" >> "$LOG" 2>&1
+}
 
 is_obs_live() {
   count=$(curl -s "$API" | python3 -c "
@@ -144,9 +185,10 @@ start_slate() {
     $FFMPEG -re -stream_loop -1 -i "$SLATE" \
       -c:v copy -c:a copy -bufsize 24000k \
       -f flv "$YOUTUBE_RTMP" \
-      >> /var/log/stream-monitor.log 2>&1 &
+      >> "$LOG" 2>&1 &
     echo $! > "$PID_FILE"
-    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS dropped — slate started (PID $!)" >> /var/log/stream-monitor.log
+    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS dropped — slate started (PID $!)" >> "$LOG"
+    send_alert "OBS Stream Down" "OBS PC has stopped sending to the Vultr relay. BRB slate is now streaming to YouTube."
   fi
 }
 
@@ -155,11 +197,12 @@ stop_slate() {
     kill "$(cat "$PID_FILE")" 2>/dev/null
     rm -f "$PID_FILE"
     pkill -f "slate.mp4" 2>/dev/null
-    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS reconnected — slate stopped" >> /var/log/stream-monitor.log
+    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS reconnected — slate stopped" >> "$LOG"
+    send_alert "OBS Stream Recovered" "OBS PC has reconnected to the Vultr relay. Live feed restored."
   fi
 }
 
-echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") stream-monitor started" >> /var/log/stream-monitor.log
+echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") stream-monitor started" >> "$LOG"
 
 while true; do
   if is_obs_live; then
