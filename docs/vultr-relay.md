@@ -121,96 +121,48 @@ Create `/opt/stream-monitor.sh`:
 ```bash
 #!/bin/bash
 
-API="http://127.0.0.1:1985/api/v1/streams/"
+STREAM_KEY="YOUR-STREAM-KEY"
+YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY"
 SLATE="/opt/fallback/slate.mp4"
-YOUTUBE_RTMP="rtmp://a.rtmp.youtube.com/live2/YOUR-STREAM-KEY"
-PID_FILE="/tmp/slate-ffmpeg.pid"
-FFMPEG="/usr/bin/ffmpeg"
-LOG="/var/log/stream-monitor.log"
-
-# Email alerts — same SMTP account as send-alert.ps1 on the OBS PC
-SMTP_HOST="smtp.safermail.co.nz"
-SMTP_PORT=25
-SMTP_USER="ups@victorcontractors.co.nz"
-SMTP_PASS="YOUR-SMTP-PASSWORD"
-ALERT_FROM="ups@victorcontractors.co.nz"
-ALERT_TO="josh@roomone.live"
-ALERT_COOLDOWN=600  # 10 minutes, matches OBS-side throttle
-
-send_alert() {
-  local subject="$1"
-  local body="$2"
-  local lock="/tmp/stream-alert-$(echo -n "$subject" | md5sum | cut -c1-8).lock"
-
-  # Throttle — skip if sent within cooldown window
-  if [ -f "$lock" ]; then
-    local age=$(( $(date +%s) - $(stat -c %Y "$lock") ))
-    [ "$age" -lt "$ALERT_COOLDOWN" ] && return
-  fi
-  touch "$lock"
-
-  python3 -c "
-import smtplib, sys
-from email.mime.text import MIMEText
-from datetime import datetime
-
-msg = MIMEText('$body\n\n--\nVultr Relay Alert\n' + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'))
-msg['Subject'] = '[BeachCam] $subject'
-msg['From'] = '$ALERT_FROM'
-msg['To'] = '$ALERT_TO'
-try:
-    s = smtplib.SMTP('$SMTP_HOST', $SMTP_PORT)
-    s.login('$SMTP_USER', '$SMTP_PASS')
-    s.sendmail('$ALERT_FROM', ['$ALERT_TO'], msg.as_string())
-    s.quit()
-except Exception as e:
-    print('Alert failed:', e, file=sys.stderr)
-" >> "$LOG" 2>&1
-}
+SRS_API="http://127.0.0.1:1985/api/v1/streams/"
 
 is_obs_live() {
-  count=$(curl -s "$API" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(len(d.get('streams', [])))
-except:
-    print(0)
-" 2>/dev/null)
-  [ "${count:-0}" -gt "0" ]
+    curl -s $SRS_API | grep -q '"active":true'
+}
+
+is_slate_running() {
+    pgrep -f "slate.mp4" > /dev/null 2>&1
 }
 
 start_slate() {
-  if [ ! -f "$PID_FILE" ]; then
-    $FFMPEG -re -stream_loop -1 -i "$SLATE" \
-      -c:v copy -c:a copy -bufsize 24000k \
-      -f flv "$YOUTUBE_RTMP" \
-      >> "$LOG" 2>&1 &
-    echo $! > "$PID_FILE"
-    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS dropped — slate started (PID $!)" >> "$LOG"
-    send_alert "OBS Stream Down" "OBS PC has stopped sending to the Vultr relay. BRB slate is now streaming to YouTube."
-  fi
+    echo "$(date) OBS offline - starting slate"
+    docker exec srs /usr/local/srs/objs/ffmpeg/bin/ffmpeg \
+        -re -stream_loop -1 -i $SLATE \
+        -c:v libx264 -preset veryfast -b:v 12000k \
+        -s 2560x1440 -c:a aac -b:a 128k \
+        -f flv $YOUTUBE_URL &
 }
 
 stop_slate() {
-  if [ -f "$PID_FILE" ]; then
-    kill "$(cat "$PID_FILE")" 2>/dev/null
-    rm -f "$PID_FILE"
-    pkill -f "slate.mp4" 2>/dev/null
-    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") OBS reconnected — slate stopped" >> "$LOG"
-    send_alert "OBS Stream Recovered" "OBS PC has reconnected to the Vultr relay. Live feed restored."
-  fi
+    echo "$(date) OBS back online - stopping slate"
+    pkill -f "docker exec srs.*slate.mp4" 2>/dev/null
+    pkill -f "ffmpeg.*slate.mp4" 2>/dev/null
+    sleep 2
 }
 
-echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") stream-monitor started" >> "$LOG"
+echo "$(date) Stream monitor started"
 
 while true; do
-  if is_obs_live; then
-    stop_slate
-  else
-    start_slate
-  fi
-  sleep 5
+    if is_obs_live; then
+        if is_slate_running; then
+            stop_slate
+        fi
+    else
+        if ! is_slate_running; then
+            start_slate
+        fi
+    fi
+    sleep 5
 done
 ```
 
