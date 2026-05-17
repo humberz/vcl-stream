@@ -322,10 +322,7 @@
       <div class="cover-chip">24/7 Automated Streaming</div>
     </div>
   </div>
-  <div class="cover-footer">
-    <img src="v-logo-white-1000x1000.png" alt="VCL"/>
-    <span>VCL Takapuna Live Cams &nbsp;·&nbsp; Technical Reference</span>
-  </div>
+
 </div>
 
 <!-- PAGE 2: TOC + OVERVIEW -->
@@ -577,6 +574,12 @@
   <p><strong>Config location on server:</strong> <code>/usr/local/srs/conf/docker.conf</code><br/>
   <strong>YouTube stream key</strong> lives in this file inside the <code>exec</code> directive and also in <code>stream-monitor.sh</code>. Both must be updated together when rotating the key.</p>
 
+
+</div>
+
+<!-- PAGE 5b: STREAM-MONITOR -->
+<div class="page break">
+
   <h3>stream-monitor.sh</h3>
   <p>Bash script running as a systemd service (<code>/etc/systemd/system/stream-monitor.service</code>). Polls the SRS HTTP API every 5 seconds. If OBS is no longer publishing, it starts FFmpeg looping <code>/opt/fallback/slate.mp4</code> directly to YouTube. When OBS reconnects, it kills the slate process and the live feed resumes.</p>
 
@@ -786,11 +789,6 @@ systemctl status  stream-monitor</pre>
     </tr>
   </table>
 
-  <!-- FOOTER -->
-  <div style="position:fixed;bottom:0;left:0;right:0;background:#0f1117;padding:14px 0;display:flex;align-items:center;justify-content:center;gap:12px;">
-    <img src="v-logo-white-1000x1000.png" alt="VCL" style="width:20px;height:20px;opacity:0.35;"/>
-    <span style="font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:0.06em;">VCL Takapuna Live Cams &nbsp;·&nbsp; Technical Reference</span>
-  </div>
 
 </div>
 
