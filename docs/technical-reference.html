@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VCL Stream — Technical Reference</title>
+  <style>
+    @media print {
+      body { font-size: 11pt; background: white; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      pre { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      h2 { page-break-after: avoid; }
+      .section { page-break-inside: avoid; }
+      pre { page-break-inside: avoid; }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+      color: #1e1e2e;
+      background: #f2f3f7;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: #0f1117;
+      color: white;
+      padding: 64px 60px 52px;
+    }
+
+    .cover-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #F6861F;
+      margin-bottom: 16px;
+    }
+
+    .cover-title {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: white;
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+
+    .cover-title span { color: #F6861F; }
+
+    .cover-subtitle {
+      font-size: 17px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 48px;
+      font-weight: 300;
+    }
+
+    .cover-chips {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cover-chip {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── LAYOUT ── */
+    .content {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      background: white;
+      border: 1px solid #e2e4ea;
+      border-radius: 10px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+    }
+
+    .toc-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 16px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 40px;
+    }
+
+    .toc-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .toc-num {
+      color: #F6861F;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .toc-item a {
+      color: #444;
+      text-decoration: none;
+    }
+
+    .toc-item a:hover { color: #F6861F; }
+
+    /* ── SECTIONS ── */
+    .section {
+      background: white;
+      border: 1px solid #e2e4ea;
+      border-radius: 10px;
+      padding: 36px 36px 28px;
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .section-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #F6861F;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e1e2e;
+      line-height: 1.2;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e1e2e;
+      margin: 28px 0 10px;
+    }
+
+    h3:first-of-type { margin-top: 4px; }
+
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 20px 0 8px;
+    }
+
+    p {
+      color: #444;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 12px;
+      color: #444;
+    }
+
+    li { margin: 4px 0; }
+
+    /* ── CODE ── */
+    pre {
+      background: #0f1117;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 18px 22px;
+      font-family: 'Consolas', 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      border: 1px solid #1e2030;
+    }
+
+    pre .comment { color: #6c7086; }
+    pre .prompt { color: #F6861F; user-select: none; }
+
+    code {
+      background: #f0f1f5;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Cascadia Code', monospace;
+      font-size: 12.5px;
+      color: #c0392b;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    /* ── TABLES ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f8f8fb;
+      text-align: left;
+      padding: 9px 14px;
+      font-weight: 600;
+      color: #555;
+      border: 1px solid #e2e4ea;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 9px 14px;
+      border: 1px solid #e2e4ea;
+      color: #444;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-orange { background: rgba(246,134,31,0.12); color: #b85e00; }
+    .badge-blue   { background: rgba(52,152,219,0.12); color: #1a6090; }
+    .badge-green  { background: rgba(39,174,96,0.12);  color: #1a6e35; }
+    .badge-purple { background: rgba(155,89,182,0.12); color: #6c3483; }
+    .badge-gray   { background: rgba(0,0,0,0.06);      color: #555; }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-left: 3px solid #F6861F;
+      background: rgba(246,134,31,0.06);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 12px 0 20px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .callout strong { color: #b85e00; }
+
+    /* ── COMPONENT CARDS ── */
+    .component-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .component-card {
+      border: 1px solid #e2e4ea;
+      border-radius: 8px;
+      padding: 18px 20px;
+    }
+
+    .component-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e1e2e;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .component-card p {
+      font-size: 12.5px;
+      color: #666;
+      margin: 0;
+    }
+
+    /* ── DIAGRAM ── */
+    .diagram-wrap {
+      background: #0f1117;
+      border-radius: 10px;
+      padding: 32px 24px;
+      margin: 8px 0 24px;
+      overflow-x: auto;
+    }
+
+    /* ── CMD GROUPS ── */
+    .cmd-group {
+      margin-bottom: 28px;
+    }
+
+    .cmd-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    /* ── FLOW INDICATOR ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .flow-node {
+      background: #f8f8fb;
+      border: 1px solid #e2e4ea;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e1e2e;
+      white-space: nowrap;
+    }
+
+    .flow-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 6px;
+    }
+
+    .flow-arrow-line {
+      font-size: 18px;
+      color: #F6861F;
+      line-height: 1;
+    }
+
+    .flow-arrow-label {
+      font-size: 10px;
+      color: #aaa;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      margin: 24px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Victor Contractors Live</div>
+  <div class="cover-title">VCL <span>Stream</span></div>
+  <div class="cover-subtitle">Technical Reference &amp; Operations Guide</div>
+  <div class="cover-chips">
+    <div class="cover-chip">Takapuna Beach &amp; Lake Pupuke</div>
+    <div class="cover-chip">OBS · Docker · Vultr · YouTube Live</div>
+    <div class="cover-chip">24/7 Automated Streaming</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">1</span><a href="#overview">System Overview</a></div>
+      <div class="toc-item"><span class="toc-num">5</span><a href="#commands">Start / Stop Reference</a></div>
+      <div class="toc-item"><span class="toc-num">2</span><a href="#diagram">Architecture Diagram</a></div>
+      <div class="toc-item"><span class="toc-num">6</span><a href="#monitoring">Monitoring &amp; Logs</a></div>
+      <div class="toc-item"><span class="toc-num">3</span><a href="#stream-pc">Stream PC Components</a></div>
+      <div class="toc-item"><span class="toc-num">7</span><a href="#config">Key Configuration</a></div>
+      <div class="toc-item"><span class="toc-num">4</span><a href="#vultr">Vultr RTMP Relay</a></div>
+      <div class="toc-item"><span class="toc-num">8</span><a href="#troubleshooting">Troubleshooting</a></div>
+    </div>
+  </div>
+
+  <!-- 1. OVERVIEW -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>System Overview</h2>
+    </div>
+
+    <p>VCL Stream is a 24/7 automated live streaming system broadcasting RTSP camera feeds of Takapuna Beach and Lake Pupuke to YouTube Live. The system is designed for unattended operation with automatic failover at multiple levels — from individual camera recovery through to a relay-hosted fallback slate if the stream PC loses power entirely.</p>
+
+    <h3>Stream Flow</h3>
+    <div class="flow">
+      <div class="flow-node">📷 RTSP Cameras</div>
+      <div class="flow-arrow"><div class="flow-arrow-line">→</div><div class="flow-arrow-label">RTSP</div></div>
+      <div class="flow-node">🖥 OBS Studio</div>
+      <div class="flow-arrow"><div class="flow-arrow-line">→</div><div class="flow-arrow-label">RTMP :1935</div></div>
+      <div class="flow-node">☁️ Vultr Relay</div>
+      <div class="flow-arrow"><div class="flow-arrow-line">→</div><div class="flow-arrow-label">RTMP</div></div>
+      <div class="flow-node">▶️ YouTube Live</div>
+    </div>
+
+    <p>OBS does not stream directly to YouTube. It pushes to a Vultr RTMP relay server in Sydney, which restreams to YouTube. This adds a reliability buffer — if the local network blips, the relay continues serving YouTube while OBS reconnects. If OBS goes down entirely, the relay switches to a BRB slate automatically.</p>
+
+    <h3>Failover Layers</h3>
+    <table>
+      <tr><th>Event</th><th>Response</th><th>Where handled</th></tr>
+      <tr><td>Single camera drops</td><td>Source restarted after 15s, BRB scene shown</td><td>OBS Lua script</td></tr>
+      <tr><td>Camera stuck in OPENING state</td><td>Treated as failure after 30s</td><td>OBS Lua script</td></tr>
+      <tr><td>All cameras recover</td><td>120s stability check, then switch back to live</td><td>OBS Lua script</td></tr>
+      <tr><td>OBS stops streaming</td><td>Stream restarted automatically</td><td>obs-watchdog.ps1</td></tr>
+      <tr><td>VPN tunnel drops</td><td>Email alert sent</td><td>vpn-watchdog.ps1</td></tr>
+      <tr><td>OBS PC loses power/network</td><td>BRB slate loops to YouTube from Vultr</td><td>stream-monitor.sh</td></tr>
+    </table>
+  </div>
+
+  <!-- 2. DIAGRAM -->
+  <div class="section" id="diagram">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Architecture Diagram</h2>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 860 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:0 auto;">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#F6861F"/>
+          </marker>
+          <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+          </marker>
+        </defs>
+
+        <!-- CAMERAS -->
+        <rect x="10" y="80" width="110" height="44" rx="8" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="65" y="97" text-anchor="middle" font-size="10" fill="#cdd6f4" font-weight="600">BeachCam</text>
+        <text x="65" y="113" text-anchor="middle" font-size="9" fill="#6c7086">RTSP</text>
+
+        <rect x="10" y="148" width="110" height="44" rx="8" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="65" y="165" text-anchor="middle" font-size="10" fill="#cdd6f4" font-weight="600">LakeCam</text>
+        <text x="65" y="181" text-anchor="middle" font-size="9" fill="#6c7086">RTSP</text>
+
+        <text x="65" y="60" text-anchor="middle" font-size="10" fill="#6c7086" font-weight="600" letter-spacing="1">CAMERAS</text>
+
+        <!-- STREAM PC BOX -->
+        <rect x="160" y="14" width="300" height="372" rx="10" fill="#161622" stroke="#2a2d3e" stroke-width="1.5"/>
+        <text x="310" y="38" text-anchor="middle" font-size="10" fill="#6c7086" font-weight="600" letter-spacing="1">STREAM PC — WINDOWS</text>
+
+        <!-- OBS sub-box -->
+        <rect x="178" y="50" width="264" height="90" rx="7" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="222" y="72" font-size="11" fill="#F6861F" font-weight="700">OBS Studio</text>
+        <text x="222" y="90" font-size="10" fill="#cdd6f4">scene-switcher.lua</text>
+        <text x="222" y="106" font-size="9" fill="#6c7086">Monitors cameras · manages scenes · email alerts</text>
+        <text x="222" y="122" font-size="9" fill="#6c7086">WebSocket API :4455</text>
+
+        <!-- Docker sub-box -->
+        <rect x="178" y="158" width="264" height="90" rx="7" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="222" y="180" font-size="11" fill="#4fc3f7" font-weight="700">Docker Overlays</text>
+        <text x="222" y="198" font-size="10" fill="#cdd6f4">weather-overlay  <tspan fill="#6c7086">:8080</tspan></text>
+        <text x="222" y="214" font-size="9" fill="#6c7086">4K weather card · camera labels · ad bug</text>
+        <text x="222" y="230" font-size="10" fill="#cdd6f4">brb-page  <tspan fill="#6c7086">:8081</tspan></text>
+
+        <!-- Services sub-box -->
+        <rect x="178" y="262" width="264" height="100" rx="7" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="222" y="284" font-size="11" fill="#a6e3a1" font-weight="700">WinSW Services</text>
+        <text x="222" y="302" font-size="10" fill="#cdd6f4">obs-watchdog.ps1</text>
+        <text x="222" y="318" font-size="9" fill="#6c7086">Reconnects OBS stream via WebSocket if it drops</text>
+        <text x="222" y="336" font-size="10" fill="#cdd6f4">vpn-watchdog.ps1</text>
+        <text x="222" y="352" font-size="9" fill="#6c7086">Monitors OpenVPN tunnel health · alerts on drop</text>
+
+        <!-- VULTR BOX -->
+        <rect x="510" y="14" width="220" height="242" rx="10" fill="#161622" stroke="#2a2d3e" stroke-width="1.5"/>
+        <text x="620" y="38" text-anchor="middle" font-size="10" fill="#6c7086" font-weight="600" letter-spacing="1">VULTR VPS — SYDNEY</text>
+
+        <!-- SRS sub-box -->
+        <rect x="526" y="50" width="188" height="80" rx="7" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="564" y="72" font-size="11" fill="#F6861F" font-weight="700">SRS v6 (Docker)</text>
+        <text x="564" y="90" font-size="9" fill="#cdd6f4">RTMP ingest :1935</text>
+        <text x="564" y="106" font-size="9" fill="#6c7086">FFmpeg exec → YouTube on publish</text>
+
+        <!-- stream-monitor sub-box -->
+        <rect x="526" y="148" width="188" height="80" rx="7" fill="#1e2030" stroke="#3a3d52" stroke-width="1"/>
+        <text x="564" y="170" font-size="11" fill="#a6e3a1" font-weight="700">stream-monitor.sh</text>
+        <text x="564" y="188" font-size="9" fill="#cdd6f4">Polls SRS API every 5s</text>
+        <text x="564" y="204" font-size="9" fill="#6c7086">Loops slate.mp4 → YouTube if OBS drops</text>
+        <text x="564" y="218" font-size="9" fill="#6c7086">systemd service</text>
+
+        <!-- YOUTUBE -->
+        <rect x="780" y="100" width="72" height="52" rx="8" fill="#cc0000" stroke="#990000" stroke-width="1"/>
+        <text x="816" y="121" text-anchor="middle" font-size="10" fill="white" font-weight="700">YouTube</text>
+        <text x="816" y="138" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.7)">Live</text>
+
+        <!-- EMAIL -->
+        <rect x="190" y="390" width="130" height="0" rx="6" fill="#1e2030"/>
+
+        <!-- ARROWS -->
+        <!-- Cameras → OBS -->
+        <line x1="120" y1="102" x2="175" y2="90" stroke="#F6861F" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="120" y1="170" x2="175" y2="100" stroke="#F6861F" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <text x="125" y="125" font-size="9" fill="#F6861F" transform="rotate(-20,125,125)">RTSP</text>
+
+        <!-- OBS → Vultr -->
+        <line x1="442" y1="90" x2="522" y2="90" stroke="#F6861F" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="455" y="83" font-size="9" fill="#F6861F">RTMP :1935</text>
+
+        <!-- SRS → YouTube -->
+        <line x1="714" y1="90" x2="777" y2="118" stroke="#F6861F" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="720" y="100" font-size="9" fill="#F6861F">RTMP</text>
+
+        <!-- stream-monitor → YouTube (dashed) -->
+        <line x1="714" y1="188" x2="777" y2="140" stroke="#555" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-dim)"/>
+        <text x="715" y="175" font-size="9" fill="#555">slate</text>
+        <text x="710" y="185" font-size="9" fill="#555">(OBS down)</text>
+
+        <!-- obs-watchdog → OBS (curved arrow within box) -->
+        <path d="M 380 310 Q 440 310 440 94 Q 440 50 442 80" stroke="#a6e3a1" stroke-width="1" stroke-dasharray="4,3" fill="none" marker-end="url(#arrow-dim)"/>
+
+        <!-- Legend -->
+        <rect x="10" y="320" width="130" height="72" rx="6" fill="#1e2030" stroke="#2a2d3e" stroke-width="1"/>
+        <text x="22" y="340" font-size="9" fill="#6c7086" font-weight="600">LEGEND</text>
+        <line x1="22" y1="353" x2="50" y2="353" stroke="#F6861F" stroke-width="2"/>
+        <text x="56" y="357" font-size="9" fill="#cdd6f4">Live stream</text>
+        <line x1="22" y1="369" x2="50" y2="369" stroke="#555" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="56" y="373" font-size="9" fill="#cdd6f4">Fallback path</text>
+        <line x1="22" y1="385" x2="50" y2="385" stroke="#a6e3a1" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="56" y="389" font-size="9" fill="#cdd6f4">Service monitoring</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 3. STREAM PC -->
+  <div class="section" id="stream-pc">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Stream PC Components</h2>
+    </div>
+
+    <h3>OBS Studio + Lua Script <span class="badge badge-orange">scene-switcher.lua</span></h3>
+    <p>The Lua script runs inside OBS and is the primary camera health monitor. It checks both RTSP sources every 2 seconds and manages scene switching automatically.</p>
+
+    <table>
+      <tr><th>Behaviour</th><th>Detail</th></tr>
+      <tr><td>Check interval</td><td>Every 2000ms</td></tr>
+      <tr><td>Healthy states</td><td>PLAYING only (OPENING/BUFFERING tolerated for up to 30s)</td></tr>
+      <tr><td>On camera failure</td><td>Immediately switches to BRB scene</td></tr>
+      <tr><td>Source restart</td><td>Attempts restart after 15s of non-playing state</td></tr>
+      <tr><td>Recovery delay</td><td>Waits 120s of stable PLAYING before switching back to main</td></tr>
+      <tr><td>Post-switch grace</td><td>15s grace period after switching to main (prevents false BRB on camera reinitialisation)</td></tr>
+      <tr><td>Reboot protection</td><td>Sources stuck in OPENING/BUFFERING for &gt;30s treated as failed</td></tr>
+      <tr><td>Email alerts</td><td>On camera drop and recovery via send-alert.ps1</td></tr>
+    </table>
+
+    <p><strong>Scenes required in OBS:</strong> <code>Lake &amp; Beach</code> (main) and <code>BRB</code>. Source names must match: <code>BeachCam</code> and <code>LakeCam</code>.</p>
+
+    <div class="callout"><strong>Note:</strong> "Restart playback when source becomes active" must be <strong>unchecked</strong> on both RTSP sources. This prevents a 10-second black screen on every scene switch.</div>
+
+    <hr/>
+
+    <h3>Docker Web Overlays</h3>
+    <p>Two Nginx containers run locally and are captured as browser sources in OBS.</p>
+
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="badge badge-blue">:8080</span> weather-overlay</div>
+        <p>4K canvas (3840×2160) serving <code>html/index.html</code>. Fetches current weather and 9-hour wind forecast from OpenWeatherMap every 10 minutes. Rotates Wind / Feels Like / Humidity stats every 5 seconds. Shows Victor Contractors ad bug every 30s for 15s. Overlays Takapuna Beach (SSE) and Lake Pupuke (WNW) camera labels.</p>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="badge badge-blue">:8081</span> brb-page</div>
+        <p>Serves <code>brb/index.html</code>. Animated wave icon, pulsing dots, live clock, and subtitle "Live Cams will return shortly." Shown when OBS switches to BRB scene due to camera failure.</p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <h3>WinSW Watchdog Services</h3>
+    <p>Three PowerShell scripts run as Windows services via WinSW, independently of OBS. They start automatically on boot.</p>
+
+    <table>
+      <tr><th>Service</th><th>Name</th><th>What it does</th></tr>
+      <tr>
+        <td><code>obs-watchdog.ps1</code></td>
+        <td><span class="badge badge-green">BeachCam-OBSWatchdog</span></td>
+        <td>Connects to OBS via WebSocket v5 (<code>ws://localhost:4455</code>). Polls stream status and calls StartStream if streaming has stopped. Implements the full OBS WebSocket v5 handshake manually.</td>
+      </tr>
+      <tr>
+        <td><code>vpn-watchdog.ps1</code></td>
+        <td><span class="badge badge-green">BeachCam-VPNWatchdog</span></td>
+        <td>Pings <code>10.0.1.1</code> to verify the OpenVPN tunnel is active. Sends an email alert if the tunnel drops.</td>
+      </tr>
+      <tr>
+        <td><code>send-alert.ps1</code></td>
+        <td><em>Called by other scripts</em></td>
+        <td>Sends SMTP email via <code>smtp.safermail.co.nz:25</code>. Throttles each alert type to once per 10 minutes using lock files in <code>%TEMP%</code>.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 4. VULTR -->
+  <div class="section" id="vultr">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Vultr RTMP Relay</h2>
+    </div>
+
+    <table>
+      <tr><th>Property</th><th>Value</th></tr>
+      <tr><td>Provider</td><td>Vultr Cloud Compute, Sydney</td></tr>
+      <tr><td>OS</td><td>Ubuntu 24.04 LTS</td></tr>
+      <tr><td>Spec</td><td>2 vCPU / 4GB RAM / 3TB transfer</td></tr>
+      <tr><td>Server IP</td><td><code>149.28.163.222</code></td></tr>
+      <tr><td>OBS machine IP</td><td><code>161.29.196.211</code> — UFW locks ports 1935 &amp; 8080 to this IP</td></tr>
+    </table>
+
+    <h3>SRS v6 (Simple Realtime Server)</h3>
+    <p>Runs in Docker. Accepts the RTMP stream from OBS on port 1935 and uses an <code>exec</code> directive to pipe it to YouTube via FFmpeg automatically when OBS publishes.</p>
+
+    <table>
+      <tr><th>Port</th><th>Purpose</th></tr>
+      <tr><td>1935</td><td>RTMP ingest (OBS → SRS)</td></tr>
+      <tr><td>1985</td><td>SRS HTTP API — used by stream-monitor.sh to detect if OBS is live</td></tr>
+      <tr><td>8080</td><td>SRS HTTP stats dashboard</td></tr>
+    </table>
+
+    <p><strong>Config location on server:</strong> <code>/usr/local/srs/conf/docker.conf</code><br/>
+    <strong>YouTube stream key</strong> lives in this file inside the <code>exec</code> directive. Must also be updated in <code>stream-monitor.sh</code> when rotating.</p>
+
+    <h3>stream-monitor.sh</h3>
+    <p>Bash script running as a systemd service (<code>/etc/systemd/system/stream-monitor.service</code>). Polls the SRS HTTP API every 5 seconds. If OBS is no longer publishing, it starts FFmpeg looping <code>/opt/fallback/slate.mp4</code> directly to YouTube. When OBS reconnects, it kills the slate process and the live feed resumes via SRS.</p>
+
+    <div class="callout"><strong>Note:</strong> The slate encodes at 2560×1440 / 12Mbps to match OBS output. Switching between live and slate causes a new RTMP connection to YouTube, which resets the DVR scrub window — this is a known architectural limitation.</div>
+  </div>
+
+  <!-- 5. COMMANDS -->
+  <div class="section" id="commands">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Start / Stop Reference</h2>
+    </div>
+
+    <h3>Full System Start</h3>
+    <p>Run in this order on the Stream PC (PowerShell as Administrator), then SSH to Vultr:</p>
+
+    <div class="cmd-group">
+      <div class="cmd-label">1 — Stream PC · Docker Overlays</div>
+<pre>docker-compose up -d</pre>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-label">2 — Stream PC · Watchdog Services</div>
+<pre>Start-Service BeachCam-OBSWatchdog
+Start-Service BeachCam-VPNWatchdog</pre>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-label">3 — Stream PC · OBS</div>
+      <p style="margin-bottom:8px">Launch OBS normally. Start streaming manually or via scheduled automation. The Lua script loads automatically.</p>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-label">4 — Vultr · Start relay (if stopped)</div>
+<pre>docker start srs
+systemctl start stream-monitor</pre>
+    </div>
+
+    <hr/>
+
+    <h3>Full System Stop</h3>
+
+    <div class="cmd-group">
+      <div class="cmd-label">Vultr — stop relay first</div>
+<pre>systemctl stop stream-monitor
+docker stop srs
+pkill -f "slate.mp4"    <span class="comment"># if slate is still running</span></pre>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-label">Stream PC — stop OBS, then services and overlays</div>
+<pre>Stop-Service BeachCam-OBSWatchdog
+Stop-Service BeachCam-VPNWatchdog
+docker-compose down</pre>
+    </div>
+
+    <hr/>
+
+    <h3>Individual Component Commands</h3>
+
+    <h4>Docker Overlays (Stream PC)</h4>
+<pre>docker-compose up -d              <span class="comment"># start both containers</span>
+docker-compose down               <span class="comment"># stop both containers</span>
+docker-compose ps                 <span class="comment"># check status</span>
+docker logs weather-overlay       <span class="comment"># view overlay logs</span>
+docker logs brb-page</pre>
+
+    <h4>Watchdog Services (Stream PC · PowerShell as Admin)</h4>
+<pre>Get-Service "BeachCam-*"                          <span class="comment"># list all with status</span>
+Start-Service BeachCam-OBSWatchdog
+Stop-Service  BeachCam-OBSWatchdog
+Start-Service BeachCam-VPNWatchdog
+Stop-Service  BeachCam-VPNWatchdog</pre>
+
+    <h4>OBS Lua Script</h4>
+    <p>Load or reload via <strong>OBS → Tools → Scripts</strong>. Remove and re-add <code>scripts/scene-switcher.lua</code> to apply updates. Debug output appears in the OBS log window.</p>
+
+    <h4>Vultr — SRS Container</h4>
+<pre>docker start srs
+docker stop srs
+docker restart srs                <span class="comment"># apply config changes</span>
+docker logs -f srs                <span class="comment"># live log stream</span></pre>
+
+    <h4>Vultr — Stream Monitor Service</h4>
+<pre>systemctl start   stream-monitor
+systemctl stop    stream-monitor
+systemctl restart stream-monitor
+systemctl status  stream-monitor</pre>
+  </div>
+
+  <!-- 6. MONITORING -->
+  <div class="section" id="monitoring">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Monitoring &amp; Logs</h2>
+    </div>
+
+    <h3>Stream PC</h3>
+    <table>
+      <tr><th>What</th><th>Command / Location</th></tr>
+      <tr><td>OBS watchdog live log</td><td><code>Get-Content "C:\BeachCam\logs\obs-watchdog.log" -Wait</code></td></tr>
+      <tr><td>VPN watchdog live log</td><td><code>Get-Content "C:\BeachCam\logs\vpn-watchdog.log" -Wait</code></td></tr>
+      <tr><td>Email alert log</td><td><code>C:\BeachCam\logs\alerts.log</code></td></tr>
+      <tr><td>OBS script output</td><td>OBS → Help → Log Files, or the script log panel in Tools → Scripts</td></tr>
+      <tr><td>Overlay health</td><td>Open <code>http://localhost:8080</code> and <code>http://localhost:8081</code> in browser</td></tr>
+    </table>
+
+    <h3>Vultr</h3>
+    <table>
+      <tr><th>What</th><th>Command</th></tr>
+      <tr><td>Stream monitor log</td><td><code>journalctl -u stream-monitor -f</code></td></tr>
+      <tr><td>SRS container log</td><td><code>docker logs -f srs</code></td></tr>
+      <tr><td>Check if OBS is live</td><td><code>curl http://127.0.0.1:1985/api/v1/streams/</code></td></tr>
+      <tr><td>Check slate is running</td><td><code>pgrep -f slate.mp4</code></td></tr>
+    </table>
+  </div>
+
+  <!-- 7. CONFIG -->
+  <div class="section" id="config">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>Key Configuration</h2>
+    </div>
+
+    <h3>Lua Script Constants <span class="badge badge-gray">scripts/scene-switcher.lua</span></h3>
+    <table>
+      <tr><th>Constant</th><th>Default</th><th>Purpose</th></tr>
+      <tr><td><code>MAIN_SCENE</code></td><td><code>Lake &amp; Beach</code></td><td>Scene name for normal streaming</td></tr>
+      <tr><td><code>BRB_SCENE</code></td><td><code>BRB</code></td><td>Scene name for fallback</td></tr>
+      <tr><td><code>CHECK_MS</code></td><td><code>2000</code></td><td>Health check interval (ms)</td></tr>
+      <tr><td><code>RECOVERY_DELAY</code></td><td><code>120</code></td><td>Seconds cameras must be stable before switching back</td></tr>
+      <tr><td><code>RESTART_AFTER_S</code></td><td><code>15</code></td><td>Seconds before attempting a source restart</td></tr>
+      <tr><td><code>POST_SWITCH_GRACE_S</code></td><td><code>15</code></td><td>Grace period after switching to main scene</td></tr>
+      <tr><td><code>OPENING_TIMEOUT_S</code></td><td><code>30</code></td><td>Max time a source can be in OPENING/BUFFERING before treated as failed</td></tr>
+    </table>
+
+    <h3>OBS Streaming Settings</h3>
+    <table>
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr><td>Service</td><td>Custom RTMP</td></tr>
+      <tr><td>Server</td><td><code>rtmp://149.28.163.222/live</code></td></tr>
+      <tr><td>Stream Key</td><td><code>stream</code></td></tr>
+      <tr><td>Resolution</td><td>2560×1440</td></tr>
+      <tr><td>Video Bitrate</td><td>12000 Kbps</td></tr>
+      <tr><td>Encoder</td><td>NVENC H.264</td></tr>
+      <tr><td>Keyframe Interval</td><td>2 seconds</td></tr>
+    </table>
+
+    <h3>Email Alerts</h3>
+    <table>
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr><td>SMTP server</td><td><code>smtp.safermail.co.nz:25</code></td></tr>
+      <tr><td>From</td><td><code>ups@victorcontractors.co.nz</code></td></tr>
+      <tr><td>To</td><td><code>josh@roomone.live</code>, <code>nathan@victorcontractors.co.nz</code></td></tr>
+      <tr><td>Throttle</td><td>10 minutes per alert type</td></tr>
+    </table>
+
+    <h3>Deployment Paths</h3>
+    <p>All scripts reference <code>C:\BeachCam\</code> as the deployment root. If redeploying to a different path, grep for <code>C:\BeachCam</code> across all <code>.ps1</code>, <code>.lua</code>, and WinSW <code>.xml</code> files.</p>
+  </div>
+
+  <!-- 8. TROUBLESHOOTING -->
+  <div class="section" id="troubleshooting">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Troubleshooting</h2>
+    </div>
+
+    <table>
+      <tr><th>Symptom</th><th>Likely cause</th><th>Action</th></tr>
+      <tr>
+        <td>Cameras show black on reboot, no BRB</td>
+        <td>Source stuck in OPENING state</td>
+        <td>Lua script will detect after 30s and trigger BRB automatically. If persistent, restart the RTSP sources manually in OBS.</td>
+      </tr>
+      <tr>
+        <td>BRB triggers briefly after switching back to main</td>
+        <td>Cameras reinitialising after scene switch</td>
+        <td>Handled by 15s post-switch grace period. Verify "Restart playback when source becomes active" is unchecked on both sources.</td>
+      </tr>
+      <tr>
+        <td>Stream drops but OBS shows streaming</td>
+        <td>RTMP connection to Vultr lost</td>
+        <td>Check VPN tunnel. obs-watchdog.ps1 will auto-restart the stream. Check <code>obs-watchdog.log</code>.</td>
+      </tr>
+      <tr>
+        <td>YouTube shows offline / Vultr slate not playing</td>
+        <td>SRS container or stream-monitor stopped</td>
+        <td>SSH to Vultr: <code>docker start srs &amp;&amp; systemctl start stream-monitor</code></td>
+      </tr>
+      <tr>
+        <td>Weather overlay not showing</td>
+        <td>Docker container stopped or API key issue</td>
+        <td>Run <code>docker-compose ps</code> and <code>docker logs weather-overlay</code>. Check <code>http://localhost:8080</code> in browser.</td>
+      </tr>
+      <tr>
+        <td>No email alerts being received</td>
+        <td>Lock files throttling / SMTP issue</td>
+        <td>Check <code>C:\BeachCam\logs\alerts.log</code>. Clear lock files in <code>%TEMP%\beachcam-alert-*.lock</code> to reset throttle.</td>
+      </tr>
+      <tr>
+        <td>Rotating the YouTube stream key</td>
+        <td>Key needs updating in two places</td>
+        <td>Update <code>/usr/local/srs/conf/docker.conf</code> (exec directive) and <code>/opt/stream-monitor.sh</code>, then run <code>docker restart srs &amp;&amp; systemctl restart stream-monitor</code>.</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

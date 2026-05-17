@@ -3,7 +3,7 @@ param(
     [string]$Body = "An alert was triggered."
 )
 
-$To = "josh@roomone.live"
+$To = @("josh@roomone.live", "nathan@victorcontractors.co.nz")
 $From = "ups@victorcontractors.co.nz"
 $SMTPServer = "smtp.safermail.co.nz"
 $SMTPPort = 25
