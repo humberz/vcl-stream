@@ -3,3 +3,5 @@ CLAUDE.md
 logs/
 winsw/*.log
 audio/
+node_modules/
+docs/technical-reference.pdf

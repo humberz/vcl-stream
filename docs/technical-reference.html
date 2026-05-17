@@ -7,12 +7,15 @@
   <style>
     @media print {
       body { font-size: 11pt; background: white; }
-      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      pre { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      h2 { page-break-after: avoid; }
+      .cover, .badge, pre, table, tr, td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      h2, h3, h4 { page-break-after: avoid; }
       .section { page-break-inside: avoid; }
       pre { page-break-inside: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      thead { display: table-header-group; }
+      .component-card { page-break-inside: avoid; }
+      .cmd-group { page-break-inside: avoid; }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
