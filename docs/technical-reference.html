@@ -56,30 +56,43 @@
       margin-bottom: 40px;
     }
 
-    .cover-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 60px; }
-
-    .cover-chip {
-      font-size: 11px;
-      padding: 5px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.15);
-      color: rgba(255,255,255,0.55);
-    }
-
-    .cover-footer {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    /* ── COVER TOC ── */
+    .cover-toc {
+      margin-top: 36px;
       border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 20px;
+      padding-top: 28px;
     }
 
-    .cover-footer img { width: 24px; height: 24px; opacity: 0.35; }
+    .cover-toc-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 18px;
+    }
 
-    .cover-footer span {
-      font-size: 11px;
-      color: rgba(255,255,255,0.2);
-      letter-spacing: 0.06em;
+    .cover-toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 48px;
+    }
+
+    .cover-toc-item {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      font-weight: 300;
+    }
+
+    .cover-toc-num {
+      color: #F6861F;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+      width: 16px;
     }
 
     /* ── PAGE WRAPPER ── */
@@ -316,31 +329,25 @@
       <img src="v-logo-white-1000x1000.png" alt="VCL Logo" class="cover-logo"/>
     </div>
     <div class="cover-subtitle">Technical Reference &amp; Operations Guide</div>
-    <div class="cover-chips">
-      <div class="cover-chip">Takapuna Beach &amp; Lake Pupuke</div>
-      <div class="cover-chip">OBS · Docker · Vultr · YouTube Live</div>
-      <div class="cover-chip">24/7 Automated Streaming</div>
+    <div class="cover-toc">
+      <div class="cover-toc-title">Contents</div>
+      <div class="cover-toc-grid">
+        <div class="cover-toc-item"><span class="cover-toc-num">1</span> System Overview</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">5</span> Start / Stop Reference</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">2</span> Architecture Diagram</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">6</span> Monitoring &amp; Logs</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">3</span> Stream PC Components</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">7</span> Key Configuration</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">4</span> Vultr RTMP Relay</div>
+        <div class="cover-toc-item"><span class="cover-toc-num">8</span> Troubleshooting</div>
+      </div>
     </div>
   </div>
 
 </div>
 
-<!-- PAGE 2: TOC + OVERVIEW -->
+<!-- PAGE 2: OVERVIEW -->
 <div class="page break">
-
-  <div class="toc">
-    <div class="toc-title">Contents</div>
-    <div class="toc-grid">
-      <div class="toc-item"><span class="toc-num">1</span> System Overview</div>
-      <div class="toc-item"><span class="toc-num">5</span> Start / Stop Reference</div>
-      <div class="toc-item"><span class="toc-num">2</span> Architecture Diagram</div>
-      <div class="toc-item"><span class="toc-num">6</span> Monitoring &amp; Logs</div>
-      <div class="toc-item"><span class="toc-num">3</span> Stream PC Components</div>
-      <div class="toc-item"><span class="toc-num">7</span> Key Configuration</div>
-      <div class="toc-item"><span class="toc-num">4</span> Vultr RTMP Relay</div>
-      <div class="toc-item"><span class="toc-num">8</span> Troubleshooting</div>
-    </div>
-  </div>
 
   <div class="section-header">
     <div class="section-num">1</div>
