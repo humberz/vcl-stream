@@ -91,7 +91,7 @@ function switch_to_scene(scene_name)
 end
 
 function send_alert(subject, body)
-    local cmd = 'powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "' .. ALERT_SCRIPT .. '" -Subject "' .. subject .. '" -Body "' .. body .. '"'
+    local cmd = 'start "" /b powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "' .. ALERT_SCRIPT .. '" -Subject "' .. subject .. '" -Body "' .. body .. '"'
     os.execute(cmd)
 end
 
