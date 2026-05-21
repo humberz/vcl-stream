@@ -23,6 +23,7 @@ local obs = obslua
 local currently_brb = false
 local alert_sent = false
 local recovery_since = nil
+local recovery_restart_done = false
 local source_down_since = {}
 local switch_grace_until = nil
 local source_opening_since = {}
@@ -162,6 +163,7 @@ function check_sources()
                 obs.script_log(obs.LOG_INFO, "Switching to BRB - down: " .. table.concat(down_sources, ", "))
                 switch_to_scene(BRB_SCENE)
                 currently_brb = true
+                recovery_restart_done = false
             end
         end
         if not alert_sent then
@@ -171,8 +173,16 @@ function check_sources()
 
     elseif all_playing and currently_brb then
         if recovery_since == nil then
-            recovery_since = now
-            obs.script_log(obs.LOG_INFO, "Cameras recovered - waiting " .. RECOVERY_DELAY .. "s before switching back...")
+            if not recovery_restart_done then
+                obs.script_log(obs.LOG_INFO, "Cameras detected healthy - restarting sources for fresh connection...")
+                for _, name in ipairs(SOURCES) do
+                    restart_source(name)
+                end
+                recovery_restart_done = true
+            else
+                recovery_since = now
+                obs.script_log(obs.LOG_INFO, "Cameras recovered - waiting " .. RECOVERY_DELAY .. "s before switching back...")
+            end
         else
             local waited = now - recovery_since
             local remaining = RECOVERY_DELAY - waited
