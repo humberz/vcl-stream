@@ -12,6 +12,7 @@ local RECOVERY_DELAY      = 60
 local RESTART_AFTER_S     = 15
 local POST_SWITCH_GRACE_S = 15
 local RETURN_OVERLAY_S    = 60
+local RETURN_OVERLAY_SOURCE = "BRBSlide"
 local OPENING_TIMEOUT_S   = 30
 local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
 
@@ -105,7 +106,7 @@ function set_return_overlay(visible)
         if items ~= nil then
             for _, item in ipairs(items) do
                 local item_source = obs.obs_sceneitem_get_source(item)
-                if obs.obs_source_get_name(item_source) == BRB_SCENE then
+                if obs.obs_source_get_name(item_source) == RETURN_OVERLAY_SOURCE then
                     obs.obs_sceneitem_set_visible(item, visible)
                     obs.script_log(obs.LOG_INFO, "Return overlay " .. (visible and "shown" or "hidden"))
                     break
