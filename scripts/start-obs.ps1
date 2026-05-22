@@ -1,4 +1,3 @@
-$ini = "$env:APPDATA\obs-studio\global.ini"
 $sentinelDir = "$env:APPDATA\obs-studio\.sentinel"
 $log = "C:\BeachCam\logs\start-obs.log"
 
@@ -13,23 +12,6 @@ if (Test-Path $sentinelDir) {
     }
 } else {
     "[$(Get-Date)] No sentinel dir found" | Add-Content $log
-}
-
-# Also clear SafeMode flag in global.ini as a belt-and-suspenders measure
-if (Test-Path $ini) {
-    $lines = Get-Content $ini
-    $found = $false
-    $lines = $lines | ForEach-Object {
-        if ($_ -match '^SafeMode=') { $found = $true; 'SafeMode=false' } else { $_ }
-    }
-    if (-not $found) {
-        $lines = $lines | ForEach-Object {
-            $_
-            if ($_ -eq '[General]') { 'SafeMode=false' }
-        }
-    }
-    [System.IO.File]::WriteAllLines($ini, $lines)
-    "[$(Get-Date)] SafeMode cleared in global.ini (key was present: $found)" | Add-Content $log
 }
 
 Start-Process "C:\Program Files\obs-studio\bin\64bit\obs64.exe" -WorkingDirectory "C:\Program Files\obs-studio\bin\64bit"
