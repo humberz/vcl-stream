@@ -1,4 +1,4 @@
-$ini = "C:\Users\VCL\AppData\Roaming\obs-studio\global.ini"
+$ini = "$env:APPDATA\obs-studio\global.ini"
 
 $lines = Get-Content $ini
 $lines = $lines | ForEach-Object {
