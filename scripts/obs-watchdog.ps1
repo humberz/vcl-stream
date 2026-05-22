@@ -67,6 +67,16 @@ function Send-OBSRequest($requestType) {
     }
 }
 
+function Test-RelayReachable {
+    $ping = New-Object System.Net.NetworkInformation.Ping
+    try {
+        $result = $ping.Send("149.28.163.222", 3000)
+        return $result.Status -eq [System.Net.NetworkInformation.IPStatus]::Success
+    } catch {
+        return $false
+    }
+}
+
 function Is-OBSStreaming {
     $response = Send-OBSRequest "GetStreamStatus"
     if ($response -eq $null) { return $false }
@@ -122,12 +132,16 @@ while ($true) {
         }
     } elseif (-not (Is-OBSStreaming)) {
         $obsWasDown = $false
-        Write-Log "OBS running but not streaming - sending start command."
         if (-not $streamWasDown) {
             & $AlertScript -Subject "Stream Down" -Body "OBS is running but stream stopped at $(Get-Date). Attempting to restart."
             $streamWasDown = $true
         }
-        Start-OBSStream | Out-Null
+        if (-not (Test-RelayReachable)) {
+            Write-Log "OBS not streaming - relay unreachable, skipping StartStream to prevent OBS error dialog."
+        } else {
+            Write-Log "OBS running but not streaming - sending start command."
+            Start-OBSStream | Out-Null
+        }
     } else {
         $obsWasDown = $false
         if ($streamWasDown) {
