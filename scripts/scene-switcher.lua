@@ -11,6 +11,7 @@ local CHECK_MS            = 2000
 local RECOVERY_DELAY      = 120
 local RESTART_AFTER_S     = 15
 local POST_SWITCH_GRACE_S = 15
+local RETURN_OVERLAY_S    = 20
 local OPENING_TIMEOUT_S   = 30
 local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
 
@@ -26,6 +27,7 @@ local recovery_since = nil
 local recovery_restart_done = false
 local source_down_since = {}
 local switch_grace_until = nil
+local overlay_hide_at = nil
 local source_opening_since = {}
 
 function get_time_s()
@@ -91,6 +93,19 @@ function switch_to_scene(scene_name)
     end
 end
 
+function set_return_overlay(visible)
+    local scene_source = obs.obs_get_source_by_name(MAIN_SCENE)
+    if scene_source == nil then return end
+    local scene = obs.obs_scene_from_source(scene_source)
+    if scene ~= nil then
+        local item = obs.obs_scene_find_source(scene, BRB_SCENE)
+        if item ~= nil then
+            obs.obs_sceneitem_set_visible(item, visible)
+        end
+    end
+    obs.obs_source_release(scene_source)
+end
+
 function send_alert(subject, body)
     local cmd = 'start "" /b powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File "' .. ALERT_SCRIPT .. '" -Subject "' .. subject .. '" -Body "' .. body .. '"'
     os.execute(cmd)
@@ -112,6 +127,13 @@ function check_sources()
     end
 
     local now = get_time_s()
+
+    if overlay_hide_at ~= nil and now >= overlay_hide_at then
+        obs.script_log(obs.LOG_INFO, "Hiding return overlay")
+        set_return_overlay(false)
+        overlay_hide_at = nil
+    end
+
     local down_sources = get_down_sources()
     local all_playing = #down_sources == 0
 
@@ -191,6 +213,9 @@ function check_sources()
             else
                 obs.script_log(obs.LOG_INFO, "Recovery delay complete - switching back to Lake & Beach")
                 switch_to_scene(MAIN_SCENE)
+                set_return_overlay(true)
+                obs.script_log(obs.LOG_INFO, "Return overlay shown - hiding in " .. RETURN_OVERLAY_S .. "s")
+                overlay_hide_at = now + RETURN_OVERLAY_S
                 currently_brb = false
                 recovery_since = nil
                 switch_grace_until = now + POST_SWITCH_GRACE_S
