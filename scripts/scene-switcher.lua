@@ -81,7 +81,9 @@ function restart_source(source_name)
     local state = obs.obs_source_media_get_state(source)
     local state_name = get_source_state_name(state)
     obs.script_log(obs.LOG_INFO, "Restarting source: " .. source_name .. " (state: " .. state_name .. ")")
-    obs.obs_source_media_restart(source)
+    local settings = obs.obs_source_get_settings(source)
+    obs.obs_source_update(source, settings)
+    obs.obs_data_release(settings)
     obs.obs_source_release(source)
 end
 
