@@ -35,7 +35,7 @@ Key behaviours:
 
 ### 2. PowerShell Watchdog Services (`scripts/`)
 Windows services (via WinSW) that run independently of OBS:
-- `obs-watchdog.ps1` — connects to OBS WebSocket v5 (`ws://localhost:4455`), implements the Hello→Identify→Identified handshake, polls `GetStreamStatus`, and calls `StartStream` if streaming has dropped
+- `obs-watchdog.ps1` — connects to OBS WebSocket v5 (`ws://localhost:4455`), implements the Hello→Identify→Identified handshake, polls `GetStreamStatus`, and calls `StartStream` if streaming has dropped. Pings `149.28.163.222` (Vultr relay) before calling `StartStream` — skips the call if unreachable to prevent OBS showing a blocking error dialog during network outages.
 - `vpn-watchdog.ps1` — pings `10.0.1.1` to check OpenVPN tunnel health; alerts on disconnect
 - `send-alert.ps1` — SMTP alerting via `smtp.safermail.co.nz:25` with 10-minute per-type throttling using lock files in `%TEMP%`. Recipients: `josh@roomone.live` and `nathan@victorcontractors.co.nz`.
 
@@ -119,7 +119,7 @@ See `docs/vultr-relay.md` for the full deployment runbook.
 
 ## Key Implementation Notes
 
-- `obs-watchdog.ps1` implements OBS WebSocket v5 manually (op codes 0/1/2/6/7) since there's no native PS WebSocket client library
+- `obs-watchdog.ps1` implements OBS WebSocket v5 manually (op codes 0/1/2/6/7) since there's no native PS WebSocket client library. Must ping relay before `StartStream` — calling StartStream when the RTMP relay is unreachable causes OBS to show a blocking error dialog requiring manual dismissal. OBS 32+ removed reconnect settings from the UI; reconnects are handled internally.
 - Source state values tracked in Lua: `PLAYING`, `OPENING`, `BUFFERING`, `STOPPED`, `ENDED`, `ERROR` — only `PLAYING` is healthy
 - Email throttle uses filesystem lock files (`%TEMP%\beachcam-alert-*.lock`) so alerts survive service restarts
 - `scripts/archive/scene-switcher-060526.lua` is the previous version (20s restart, simpler state tracking) kept for reference

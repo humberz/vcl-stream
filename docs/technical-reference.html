@@ -542,7 +542,7 @@
     <tr>
       <td><code>obs-watchdog.ps1</code></td>
       <td><span class="badge badge-green">BeachCam-OBSWatchdog</span></td>
-      <td>Connects to OBS via WebSocket v5 (<code>ws://localhost:4455</code>). Polls stream status and calls StartStream if streaming has stopped. Implements the full OBS WebSocket v5 handshake manually.</td>
+      <td>Connects to OBS via WebSocket v5 (<code>ws://localhost:4455</code>). Polls stream status and calls StartStream if streaming has stopped. Implements the full OBS WebSocket v5 handshake manually. Pings the Vultr relay (<code>149.28.163.222</code>) before calling StartStream — skips the call if the relay is unreachable to prevent OBS showing a blocking "cannot connect" error dialog during network outages.</td>
     </tr>
     <tr>
       <td><code>vpn-watchdog.ps1</code></td>
@@ -816,6 +816,11 @@ systemctl status  stream-monitor</pre>
       <td>OBS prompts for safe mode on boot</td>
       <td>OBS was previously force-killed or lost power</td>
       <td>Use the <strong>OBS Start</strong> shortcut (not the OBS desktop icon directly). If already launched, close OBS and reopen via the shortcut. Check <code>C:\BeachCam\logs\start-obs.log</code> to confirm the script ran.</td>
+    </tr>
+    <tr>
+      <td>OBS "cannot connect" error dialog during network outage</td>
+      <td>obs-watchdog.ps1 called StartStream while relay was unreachable</td>
+      <td>Fixed in current watchdog — it pings <code>149.28.163.222</code> before calling StartStream and skips if unreachable. If still occurring, ensure the stream PC is running the latest <code>obs-watchdog.ps1</code> and restart the <code>BeachCam-OBSWatchdog</code> service.</td>
     </tr>
     <tr>
       <td>Lua script missing from OBS after power loss</td>
