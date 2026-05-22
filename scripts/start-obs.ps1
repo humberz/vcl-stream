@@ -28,7 +28,7 @@ if (Test-Path $ini) {
             if ($_ -eq '[General]') { 'SafeMode=false' }
         }
     }
-    $lines | Set-Content $ini
+    [System.IO.File]::WriteAllLines($ini, $lines)
     "[$(Get-Date)] SafeMode cleared in global.ini (key was present: $found)" | Add-Content $log
 }
 
