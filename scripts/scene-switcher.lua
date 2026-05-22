@@ -8,10 +8,10 @@
 local MAIN_SCENE      = "Lake & Beach"
 local BRB_SCENE       = "BRB"
 local CHECK_MS            = 2000
-local RECOVERY_DELAY      = 120
+local RECOVERY_DELAY      = 60
 local RESTART_AFTER_S     = 15
 local POST_SWITCH_GRACE_S = 15
-local RETURN_OVERLAY_S    = 20
+local RETURN_OVERLAY_S    = 60
 local OPENING_TIMEOUT_S   = 30
 local ALERT_SCRIPT    = "C:\\BeachCam\\scripts\\send-alert.ps1"
 
@@ -101,9 +101,17 @@ function set_return_overlay(visible)
     if scene_source == nil then return end
     local scene = obs.obs_scene_from_source(scene_source)
     if scene ~= nil then
-        local item = obs.obs_scene_find_source(scene, BRB_SCENE)
-        if item ~= nil then
-            obs.obs_sceneitem_set_visible(item, visible)
+        local items = obs.obs_scene_enum_items(scene)
+        if items ~= nil then
+            for _, item in ipairs(items) do
+                local item_source = obs.obs_sceneitem_get_source(item)
+                if obs.obs_source_get_name(item_source) == BRB_SCENE then
+                    obs.obs_sceneitem_set_visible(item, visible)
+                    obs.script_log(obs.LOG_INFO, "Return overlay " .. (visible and "shown" or "hidden"))
+                    break
+                end
+            end
+            obs.sceneitem_list_release(items)
         end
     end
     obs.obs_source_release(scene_source)
