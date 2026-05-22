@@ -374,7 +374,8 @@
     <tr><th>Event</th><th>Response</th><th>Where handled</th></tr>
     <tr><td>Single camera drops</td><td>Source restarted after 15s, BRB scene shown</td><td>OBS Lua script</td></tr>
     <tr><td>Camera stuck in OPENING state</td><td>Treated as failure after 30s</td><td>OBS Lua script</td></tr>
-    <tr><td>All cameras recover</td><td>120s stability check, then switch back to live</td><td>OBS Lua script</td></tr>
+    <tr><td>All cameras recover</td><td>60s stability check, then switch back to live</td><td>OBS Lua script</td></tr>
+    <tr><td>OBS launched after power loss</td><td>Safe mode prompt bypassed automatically</td><td>start-obs.ps1</td></tr>
     <tr><td>OBS stops streaming</td><td>Stream restarted automatically</td><td>obs-watchdog.ps1</td></tr>
     <tr><td>VPN tunnel drops</td><td>Email alert sent</td><td>vpn-watchdog.ps1</td></tr>
     <tr><td>OBS PC loses power / network</td><td>BRB slate loops to YouTube from Vultr</td><td>stream-monitor.sh</td></tr>
@@ -499,8 +500,9 @@
     <tr><td>Healthy states</td><td>PLAYING only — OPENING/BUFFERING tolerated for up to 30s</td></tr>
     <tr><td>On camera failure</td><td>Immediately switches to BRB scene</td></tr>
     <tr><td>Source restart</td><td>Attempts restart after 15s of non-playing state</td></tr>
-    <tr><td>Recovery delay</td><td>Waits 120s of stable PLAYING before switching back to main</td></tr>
+    <tr><td>Recovery delay</td><td>Waits 60s of stable PLAYING before switching back to main</td></tr>
     <tr><td>Post-switch grace</td><td>15s grace period after switching to main (prevents false BRB on camera reinitialisation)</td></tr>
+    <tr><td>Return overlay</td><td>BRBSlide source shown for 60s on return from BRB, covering cameras during reinitialisation</td></tr>
     <tr><td>Reboot protection</td><td>Sources stuck in OPENING/BUFFERING for &gt;30s treated as failed</td></tr>
     <tr><td>Email alerts</td><td>On camera drop and recovery via send-alert.ps1</td></tr>
   </table>
@@ -508,6 +510,8 @@
   <p><strong>Scenes required in OBS:</strong> <code>Lake &amp; Beach</code> (main) and <code>BRB</code>. Source names must match: <code>BeachCam</code> and <code>LakeCam</code>.</p>
 
   <div class="callout"><strong>Note:</strong> "Restart playback when source becomes active" must be <strong>unchecked</strong> on both RTSP sources. This prevents a 10-second black screen on every scene switch.</div>
+
+  <div class="callout"><strong>OBS Setup — Return overlay:</strong> In the <code>Lake &amp; Beach</code> scene, add a source → Scene → BRB, rename it <code>BRBSlide</code>, place it at the top of the source list, and set it hidden (eye off). The Lua script shows and hides it automatically on camera recovery.</div>
 
   <hr/>
 
@@ -549,6 +553,11 @@
       <td><code>send-alert.ps1</code></td>
       <td><em>Called by other scripts</em></td>
       <td>Sends SMTP email via <code>smtp.safermail.co.nz:25</code>. Throttles each alert type to once per 10 minutes using lock files in <code>%TEMP%</code>.</td>
+    </tr>
+    <tr>
+      <td><code>start-obs.ps1</code></td>
+      <td><em>Windows startup shortcut</em></td>
+      <td>Clears OBS safe mode triggers before launching OBS — deletes <code>.sentinel</code> files and resets <code>SafeMode=false</code> in <code>global.ini</code>. Prevents the safe mode prompt after power loss or forced shutdown. Logs to <code>C:\BeachCam\logs\start-obs.log</code>.</td>
     </tr>
   </table>
 
@@ -617,7 +626,7 @@ Start-Service BeachCam-VPNWatchdog</pre>
 
   <div class="cmd-group">
     <div class="cmd-label">3 — Stream PC · OBS</div>
-    <p>Launch OBS normally and start streaming. The Lua script loads automatically.</p>
+    <p>Use the <strong>OBS Start</strong> desktop shortcut (runs <code>scripts/start-obs.ps1</code>). This clears safe mode triggers then launches OBS. The Lua script loads automatically and OBS begins streaming.</p>
   </div>
 
   <div class="cmd-group">
@@ -695,6 +704,7 @@ systemctl status  stream-monitor</pre>
     <tr><td>VPN watchdog log</td><td><code>Get-Content "C:\BeachCam\logs\vpn-watchdog.log" -Wait</code></td></tr>
     <tr><td>Email alert log</td><td><code>C:\BeachCam\logs\alerts.log</code></td></tr>
     <tr><td>OBS script output</td><td>OBS → Help → Log Files, or Tools → Scripts panel</td></tr>
+    <tr><td>OBS startup log</td><td><code>C:\BeachCam\logs\start-obs.log</code> — confirms safe mode bypass on each launch</td></tr>
     <tr><td>Overlay health</td><td>Open <code>http://localhost:8080</code> and <code>http://localhost:8081</code> in browser</td></tr>
   </table>
 
@@ -720,10 +730,12 @@ systemctl status  stream-monitor</pre>
     <tr><td><code>MAIN_SCENE</code></td><td><code>Lake &amp; Beach</code></td><td>Scene name for normal streaming</td></tr>
     <tr><td><code>BRB_SCENE</code></td><td><code>BRB</code></td><td>Scene name for fallback</td></tr>
     <tr><td><code>CHECK_MS</code></td><td><code>2000</code></td><td>Health check interval (ms)</td></tr>
-    <tr><td><code>RECOVERY_DELAY</code></td><td><code>120</code></td><td>Seconds cameras must be stable before switching back</td></tr>
+    <tr><td><code>RECOVERY_DELAY</code></td><td><code>60</code></td><td>Seconds cameras must be stable before switching back</td></tr>
     <tr><td><code>RESTART_AFTER_S</code></td><td><code>15</code></td><td>Seconds before attempting a source restart</td></tr>
     <tr><td><code>POST_SWITCH_GRACE_S</code></td><td><code>15</code></td><td>Grace period after switching to main scene</td></tr>
     <tr><td><code>OPENING_TIMEOUT_S</code></td><td><code>30</code></td><td>Max time in OPENING/BUFFERING before treated as failed</td></tr>
+    <tr><td><code>RETURN_OVERLAY_S</code></td><td><code>60</code></td><td>Seconds the BRBSlide overlay is shown after switching back to main scene</td></tr>
+    <tr><td><code>RETURN_OVERLAY_SOURCE</code></td><td><code>BRBSlide</code></td><td>Name of the overlay source in the Lake &amp; Beach scene</td></tr>
   </table>
 
 
@@ -799,6 +811,11 @@ systemctl status  stream-monitor</pre>
       <td>Rotating the YouTube stream key</td>
       <td>Key exists in two places on Vultr</td>
       <td>Update <code>/usr/local/srs/conf/docker.conf</code> (exec directive) and <code>/opt/stream-monitor.sh</code>, then:<br/><code>docker restart srs &amp;&amp; systemctl restart stream-monitor</code></td>
+    </tr>
+    <tr>
+      <td>OBS prompts for safe mode on boot</td>
+      <td>OBS was previously force-killed or lost power</td>
+      <td>Use the <strong>OBS Start</strong> shortcut (not the OBS desktop icon directly). If already launched, close OBS and reopen via the shortcut. Check <code>C:\BeachCam\logs\start-obs.log</code> to confirm the script ran.</td>
     </tr>
   </table>
 
