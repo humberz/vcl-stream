@@ -28,6 +28,7 @@ local recovery_restart_done = false
 local source_down_since = {}
 local switch_grace_until = nil
 local overlay_hide_at = nil
+local post_switch_reinit_pending = false
 local source_opening_since = {}
 
 function get_time_s()
@@ -136,6 +137,21 @@ function check_sources()
         overlay_hide_at = nil
     end
 
+    if post_switch_reinit_pending then
+        local cs = obs.obs_frontend_get_current_scene()
+        if cs ~= nil then
+            local cs_name = obs.obs_source_get_name(cs)
+            obs.obs_source_release(cs)
+            if cs_name == MAIN_SCENE then
+                obs.script_log(obs.LOG_INFO, "Post-switch reinit - restarting sources while active in scene...")
+                for _, name in ipairs(SOURCES) do
+                    restart_source(name)
+                end
+                post_switch_reinit_pending = false
+            end
+        end
+    end
+
     local down_sources = get_down_sources()
     local all_playing = #down_sources == 0
 
@@ -218,6 +234,7 @@ function check_sources()
                 set_return_overlay(true)
                 obs.script_log(obs.LOG_INFO, "Return overlay shown - hiding in " .. RETURN_OVERLAY_S .. "s")
                 overlay_hide_at = now + RETURN_OVERLAY_S
+                post_switch_reinit_pending = true
                 currently_brb = false
                 recovery_since = nil
                 switch_grace_until = now + POST_SWITCH_GRACE_S
